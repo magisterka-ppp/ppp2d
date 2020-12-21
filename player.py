@@ -7,19 +7,19 @@ class Player(object):
     def __init__(self):
         self.grounded = False
         self.max_y_vel = 20
-        self.drag = 0.85
+        self.drag = 0.8
         self.gravity = 6
-        self.collision_box = Rect(20, 0, 80, 120)
+        self.bounds = Rect(20, 0, 80, 120)
         self.color = (155, 155, 0)
         self.vel = Vector2(0, 0)
         self.acc = Vector2(0, 0)
 
     def draw(self, screen):
-        pygame.draw.rect(screen, self.color, self.collision_box)
-        #pygame.draw.rect(screen, (155, 0, 0), self.get_feet())
-        #pygame.draw.rect(screen, (155, 0, 0), self.get_head())
-        #pygame.draw.rect(screen, (155, 0, 0), self.get_right())
-        #pygame.draw.rect(screen, (155, 0, 0), self.get_left())
+        pygame.draw.rect(screen, self.color,
+                         Rect(self.bounds.x,
+                              self.bounds.y,
+                              self.bounds.width,
+                              self.bounds.height))
 
     def add_force(self, force):
         self.acc = force
@@ -40,17 +40,13 @@ class Player(object):
         self.limit_fall_speed()
 
         self.vel.x *= self.drag
-        self.collision_box.x += round(self.vel.x, 0)
-
-
-
-
+        self.bounds.x += round(self.vel.x, 0)
 
     def limit_fall_speed(self):
         if self.vel.y < self.max_y_vel:
-            self.collision_box.y += self.vel.y
+            self.bounds.y += self.vel.y
         else:
-            self.collision_box.y += self.max_y_vel
+            self.bounds.y += self.max_y_vel
 
     def collisions(self, colliders):
         self.collisions_head(colliders)
@@ -63,8 +59,16 @@ class Player(object):
         for collider in colliders:
             if head.colliderect(collider):
                 self.vel.y = 0
-            if right.colliderect(collider) or left.colliderect(collider):
+                self.bounds.y = self.bounds.y - (self.bounds.y - (collider.y + collider.height))
+
+            if right.colliderect(collider):
                 self.vel.x = 0
+                self.bounds.x = self.bounds.x - self.bounds.width - (self.bounds.x - collider.x)
+
+            if left.colliderect(collider):
+                self.vel.x = 0
+                self.bounds.x = self.bounds.x - (self.bounds.x - (collider.x + collider.width))
+
 
     def collisions_feet(self, colliders):
         feet = self.get_feet()
@@ -74,39 +78,37 @@ class Player(object):
             if feet.colliderect(collider) and self.vel.y > 0.0:
                 self.grounded = True
                 self.vel.y = 0
-                self.collision_box.y = collider.y - self.collision_box.height
+                self.bounds.y = collider.y - self.bounds.height
 
     def get_feet(self):
-        return Rect(self.collision_box.x,
-                    self.collision_box.y + self.collision_box.height,
-                    self.collision_box.width,
+        return Rect(self.bounds.x,
+                    self.bounds.y + self.bounds.height,
+                    self.bounds.width,
                     self.max_y_vel)
 
     def get_head(self):
         velocity = 0
         if self.vel.y < 0:
-            velocity = self.vel.y/2
-        return Rect(self.collision_box.x,
-                    self.collision_box.y + velocity,
-                    self.collision_box.width,
+            velocity = self.vel.y
+        return Rect(self.bounds.x,
+                    self.bounds.y + velocity,
+                    self.bounds.width,
                     -velocity)
 
     def get_right(self):
         velocity = 0
         if self.vel.x > 0:
             velocity = self.vel.x
-
-        return Rect(self.collision_box.x + self.collision_box.width,
-                    self.collision_box.y,
+        return Rect(self.bounds.x + self.bounds.width,
+                    self.bounds.y,
                     velocity,
-                    self.collision_box.height)
+                    self.bounds.height)
 
     def get_left(self):
         velocity = 0
         if self.vel.x < 0:
             velocity = self.vel.x
-
-        return Rect(self.collision_box.x + velocity,
-                    self.collision_box.y,
+        return Rect(self.bounds.x + velocity,
+                    self.bounds.y,
                     -velocity,
-                    self.collision_box.height)
+                    self.bounds.height)
