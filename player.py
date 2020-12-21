@@ -14,10 +14,10 @@ class Player(object):
         self.vel = Vector2(0, 0)
         self.acc = Vector2(0, 0)
 
-    def draw(self, screen):
+    def draw(self, screen, camera):
         pygame.draw.rect(screen, self.color,
-                         Rect(self.bounds.x,
-                              self.bounds.y,
+                         Rect(self.bounds.x - camera.x,
+                              self.bounds.y - camera.y,
                               self.bounds.width,
                               self.bounds.height))
 
@@ -32,6 +32,8 @@ class Player(object):
             self.add_force(Vector2(-3, 0))
         if pressed[pygame.K_w] and self.grounded:
             self.add_force(Vector2(0, -60))
+        if pressed[pygame.K_SPACE]:
+            print(pygame.mouse.get_pos())
 
         self.vel += self.acc
         self.acc *= 0

@@ -14,11 +14,11 @@ class Ground(object):
             Rect(0, 0, 10, 720)]
         self.color = (0, 155, 0)
 
-    def draw(self, screen):
+    def draw(self, screen, camera):
         for platform in self.platforms:
             pygame.draw.rect(screen, self.color, Rect(
-                platform.x,
-                platform.y,
+                platform.x - camera.x,
+                platform.y - camera.y,
                 platform.width,
                 platform.height))
 
