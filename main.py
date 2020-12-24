@@ -1,22 +1,14 @@
 # Zaimportowanie modułu pygame
 import pygame
 
-# Zaimportowanie pygame.locals do łatwiejszego dostępu przez koordynaty klawiszów
-from pygame.locals import (
-    K_UP,
-    K_DOWN,
-    K_LEFT,
-    K_RIGHT,
-    K_ESCAPE,
-    KEYDOWN,
-    QUIT
-)
 
 # inicjalizacja stałych dla szerokości i wysokości ekranu
+from constants import QUIT, KEYDOWN, K_ESCAPE
+
+from constants import SCREEN_WIDTH, SCREEN_HEIGHT
+from enemy import Enemy
 from player import Player
 
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
 
 # Inicjalizacja pygame
 pygame.init()
@@ -24,8 +16,19 @@ pygame.init()
 # Utworzenie obiektu 'screen'
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
-# Instancja klasy Player - player.
+# Stworzenie niestandardowego wydarzenia w celu dodania nowego wroga
+ADDENEMY = pygame.USEREVENT + 1
+pygame.time.set_timer(ADDENEMY, 250)
+
+# Instancja klasy Player - player. Prostokąt
 player = Player()
+
+# Stwórz grupy aby utrzymywać wrogie duchy i wszystkie duchy
+# - 'enemies': używane są do wykrywania kolizji i aktualizowania pozycji
+# - 'all_sprites' wykorzystywana do renderowania
+enemies = pygame.sprite.Group()
+all_sprites = pygame.sprite.Group()
+all_sprites.add(player)
 
 # Zmienna utrzymująca program w działaniu
 running = True
@@ -45,13 +48,38 @@ while running:
         elif event.type == QUIT:
             running = False
 
+        # Dodanie nowego wroga?
+        elif event.type == ADDENEMY:
+            # Stworzenie nowego wroga i dodanie go do grupy 'all_sprites'
+            new_enemy = Enemy()
+            enemies.add(new_enemy)
+            all_sprites.add(new_enemy)
+
+    # Pobierz wszystkie aktualne wciśnięte klawisze
+    pressed_keys = pygame.key.get_pressed()
+    # Odśwież położenie gracza bazująć na kliknięcich klawiszy użytkownika
+    player.update(pressed_keys)
+
+    # Aktualizacja pozycji wroga
+    enemies.update()
+
     # Wypełnienie tła kolorem czarnym
     screen.fill((0, 0, 0))
 
+    # Rysowanie wszystkich wrogów
+    for entity in all_sprites:
+        screen.blit(entity.surf, entity.rect)
+
+    # Sprawdź czy którykolwiek z wrogów zderzył się z graczem
+    if pygame.sprite.spritecollideany(player, enemies):
+        # Jeśli tak, usuń gracza i zatrzymaj pętle
+        player.kill()
+        running = False
+
     # Narysuj player'a na ekranie
-    screen.blit(player.surf, (SCREEN_WIDTH/2, SCREEN_HEIGHT/2))
+    #screen.blit(player.surf, (SCREEN_WIDTH/2, SCREEN_HEIGHT/2))
     # rysowanie obiektu w lewym qórnym rogu
-    # screen.blit(player.surf, player.rect)
+    screen.blit(player.surf, player.rect)
 
     # Odśwież widok
     pygame.display.flip()

@@ -1,116 +1,37 @@
+# Klasa 'Player' do obsługi działań gracza
+
+# Zaimportowanie biblioteki pygame
 import pygame
-from pygame.math import Vector2
-from pygame.rect import Rect
+from pygame.constants import K_UP, K_DOWN, K_LEFT, K_RIGHT
 
+from constants import SCREEN_WIDTH, SCREEN_HEIGHT
 
-class Player(object):
+# Zdefiniowanie klasy Player obiektu rozszerzonego przez pygame.sprite.Sprite
+# Powierzchnia narysowana na ekranie jest atrybutem obiektu 'player'
+class Player(pygame.sprite.Sprite):
     def __init__(self):
-        self.grounded = False
-        self.max_y_vel = 20
-        self.drag = 0.8
-        self.gravity = 6
-        self.bounds = Rect(20, 0, 80, 120)
-        self.color = (155, 155, 0)
-        self.vel = Vector2(0, 0)
-        self.acc = Vector2(0, 0)
+        super(Player, self).__init__()
+        self.surf = pygame.Surface((75, 25))
+        self.surf.fill((255, 255, 255))
+        self.rect = self.surf.get_rect()
 
-    def draw(self, screen, camera):
-        pygame.draw.rect(screen, self.color,
-                         Rect(self.bounds.x - camera.x,
-                              self.bounds.y - camera.y,
-                              self.bounds.width,
-                              self.bounds.height))
+    # Przenieś gracza bazując na kliknięciach klawiszy użytkownika
+    def update(self, pressed_keys):
+        if pressed_keys[K_UP]:
+            self.rect.move_ip(0, -5)
+        if pressed_keys[K_DOWN]:
+            self.rect.move_ip(0, 5)
+        if pressed_keys[K_LEFT]:
+            self.rect.move_ip(-5, 0)
+        if pressed_keys[K_RIGHT]:
+            self.rect.move_ip(5, 0)
 
-    def add_force(self, force):
-        self.acc = force
-
-    def logic(self, game):
-        pressed = pygame.key.get_pressed()
-        if pressed[pygame.K_d]:
-            self.add_force(Vector2(3, 0))
-        if pressed[pygame.K_a]:
-            self.add_force(Vector2(-3, 0))
-        if pressed[pygame.K_w] and self.grounded:
-            self.add_force(Vector2(0, -60))
-        if pressed[pygame.K_SPACE]:
-            print(pygame.mouse.get_pos())
-
-        self.vel += self.acc
-        self.acc *= 0
-
-        self.collisions(game.ground.platforms)
-        self.limit_fall_speed()
-
-        self.vel.x *= self.drag
-        self.bounds.x += round(self.vel.x, 0)
-
-    def limit_fall_speed(self):
-        if self.vel.y < self.max_y_vel:
-            self.bounds.y += self.vel.y
-        else:
-            self.bounds.y += self.max_y_vel
-
-    def collisions(self, colliders):
-        self.collisions_head(colliders)
-        self.collisions_feet(colliders)
-
-    def collisions_head(self, colliders):
-        head = self.get_head()
-        right = self.get_right()
-        left = self.get_left()
-        for collider in colliders:
-            if head.colliderect(collider):
-                self.vel.y = 0
-                self.bounds.y = self.bounds.y - (self.bounds.y - (collider.y + collider.height))
-
-            if right.colliderect(collider):
-                self.vel.x = 0
-                self.bounds.x = self.bounds.x - self.bounds.width - (self.bounds.x - collider.x)
-
-            if left.colliderect(collider):
-                self.vel.x = 0
-                self.bounds.x = self.bounds.x - (self.bounds.x - (collider.x + collider.width))
-
-
-    def collisions_feet(self, colliders):
-        feet = self.get_feet()
-        self.grounded = False
-        self.vel.y += self.gravity
-        for collider in colliders:
-            if feet.colliderect(collider) and self.vel.y > 0.0:
-                self.grounded = True
-                self.vel.y = 0
-                self.bounds.y = collider.y - self.bounds.height
-
-    def get_feet(self):
-        return Rect(self.bounds.x,
-                    self.bounds.y + self.bounds.height,
-                    self.bounds.width,
-                    self.max_y_vel)
-
-    def get_head(self):
-        velocity = 0
-        if self.vel.y < 0:
-            velocity = self.vel.y
-        return Rect(self.bounds.x,
-                    self.bounds.y + velocity,
-                    self.bounds.width,
-                    -velocity)
-
-    def get_right(self):
-        velocity = 0
-        if self.vel.x > 0:
-            velocity = self.vel.x
-        return Rect(self.bounds.x + self.bounds.width,
-                    self.bounds.y,
-                    velocity,
-                    self.bounds.height)
-
-    def get_left(self):
-        velocity = 0
-        if self.vel.x < 0:
-            velocity = self.vel.x
-        return Rect(self.bounds.x + velocity,
-                    self.bounds.y,
-                    -velocity,
-                    self.bounds.height)
+        # Utrzymuj położenie gracza w oknie
+        if self.rect.left < 0:
+            self.rect.left = 0;
+        if self.rect.right > SCREEN_WIDTH:
+            self.rect.right = SCREEN_WIDTH
+        if self.rect.top <= 0:
+            self.rect.top = 0
+        if self.rect.bottom >= SCREEN_HEIGHT:
+            self.rect.bottom = SCREEN_HEIGHT
