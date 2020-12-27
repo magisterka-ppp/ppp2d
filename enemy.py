@@ -1,25 +1,26 @@
 # zaimportowanie klasy random dla generowania losowych liczb
 import random
 import pygame
-from constants import SCREEN_WIDTH, SCREEN_HEIGHT
+from constants import SCREEN_WIDTH, SCREEN_HEIGHT, RLEACCEL
 
 
-# Zdefiniowanie obiektu enemy rozszerzającej pygame.sprite.Sprite
+# Zdefiniowanie obiektu enemy rozszerzającej klasę pygame.sprite.Sprite
 # Powierzchnia narysowana na ekranie jest teraz atybutem klasy 'Enemy'
 class Enemy(pygame.sprite.Sprite):
     def __init__(self):
         super(Enemy, self).__init__()
-        self.surf = pygame.Surface((20, 10))
-        self.surf.fill((255, 255, 255))
+        self.surf = pygame.image.load("./graphics/missile.png").convert()
+        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+        # Pozycja startowa jest generowana losowo
         self.rect = self.surf.get_rect(
             center=(
                 random.randint(SCREEN_WIDTH + 20, SCREEN_WIDTH + 100),
-                random.randint(0, SCREEN_HEIGHT)
+                random.randint(0, SCREEN_HEIGHT),
             )
         )
-        self.speed = random.randint(5, 20)
+        self.speed = random.randint(5, 10)
 
-    # Poruszaj wrogiem bazując na prędkości
+    # Przemieszczanie przeszkody, nadanie jej prędkości
     # Usuń wroga, kiedy osiągnie lewą stronę krawędzi ekranu
     def update(self):
         self.rect.move_ip(-self.speed, 0)
